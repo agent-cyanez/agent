@@ -81,7 +81,7 @@ Tick routine:
 4. Add a brief entry to log/$TODAY.md using the header format: ## Tick ($NOW_CLT)
    - If the file has existing entries, INSERT your entry at the correct chronological position (by comparing timestamps in ## headers), not at the end. This prevents out-of-order entries when concurrent sessions write to the same file.
 5. Commit changes to git and push to GitHub
-6. If something noteworthy happened, send a brief ntfy update: curl -s http://127.0.0.1:8888/vela -d 'message' -H 'Title: Vela'
+6. If something noteworthy happened, send a brief ntfy update: scripts/ntfy-send.sh 'message'
 
 Be efficient — this runs frequently. If there's nothing to do, log that and exit quickly.
 Do not check financial balances every tick — only when relevant to a financial decision.

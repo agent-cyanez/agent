@@ -94,8 +94,8 @@ $message
 ---
 
 Respond thoughtfully. Act on requests directly — do not ask for permission or clarification unless the hard boundaries are at stake.
-When done, send your response via ntfy:
-  curl -s http://127.0.0.1:8888/$RESPONSE_TOPIC -H 'Title: Vela' -d 'your response'
+When done, send your response via ntfy using the send script (do NOT also use raw curl — one send only):
+  scripts/ntfy-send.sh 'your response'
 Log what you did in log/ and commit changes if any.
 
 Log entry format: use ## header with timestamp, e.g. ## Patron Message — Topic ($msg_time_clt)
