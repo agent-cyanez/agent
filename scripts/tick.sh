@@ -11,19 +11,26 @@ DATA_DIR="$VELA_DIR/data"
 LOCK_FILE="$DATA_DIR/tick.lock"
 LOG_FILE="$DATA_DIR/tick.log"
 TIMING_FILE="$DATA_DIR/tick-times.csv"
+LEDGER="$VELA_DIR/scripts/session-ledger.sh"
 
 NOW_ISO=$(date -Iseconds)
 NOW_EPOCH=$(date +%s)
 TODAY=$(date +%Y-%m-%d)
 STALE_LOCK_SECONDS=1800
-MAX_DAILY_SESSIONS=${VELA_MAX_DAILY_SESSIONS:-20}
+MAX_DAILY_SESSIONS=${VELA_MAX_DAILY_SESSIONS:-120}
 SESSION_COUNT_FILE="$DATA_DIR/sessions-$TODAY.count"
+QUOTA_THRESHOLD=${VELA_QUOTA_THRESHOLD:-75}
+
+SESSION_ID=""
 
 cleanup() {
     local end_epoch=$(date +%s)
     local duration=$(( end_epoch - NOW_EPOCH ))
     echo "$NOW_ISO,$duration,$exit_code" >> "$TIMING_FILE"
     rm -f "$LOCK_FILE"
+    if [[ -n "$SESSION_ID" ]]; then
+        "$LEDGER" end "$SESSION_ID" 2>/dev/null || true
+    fi
 }
 
 get_daily_sessions() {
@@ -75,7 +82,7 @@ if [[ -f "$TIMING_FILE" ]]; then
         if [[ "$dur" == "0" ]]; then
             # Check if it was a legitimate skip
             if grep -qF "$ts" "$LOG_FILE" 2>/dev/null && \
-               grep "$ts" "$LOG_FILE" 2>/dev/null | grep -qE '\[(BUDGET|SLEEP|SKIP)\]'; then
+               grep "$ts" "$LOG_FILE" 2>/dev/null | grep -qE '\[(BUDGET|SLEEP|SKIP|QUOTA)\]'; then
                 consecutive_zeros=0
             else
                 consecutive_zeros=$((consecutive_zeros + 1))
@@ -91,8 +98,16 @@ if [[ -f "$TIMING_FILE" ]]; then
     fi
 fi
 
+# Quota gate — skip tick if 5-hour quota utilization exceeds threshold
+quota_pct=$("$VELA_DIR/scripts/quota-check.sh" "$QUOTA_THRESHOLD" 2>/dev/null) || true
+if [[ -n "$quota_pct" ]] && (( quota_pct > QUOTA_THRESHOLD )); then
+    echo "$NOW_ISO [QUOTA] 5h utilization at ${quota_pct}% (threshold ${QUOTA_THRESHOLD}%), skipping" >> "$LOG_FILE"
+    exit 0
+fi
+
 TRACKER_SUMMARY=$("$VELA_DIR/scripts/tracker.sh" summary 2>/dev/null || echo "Tracker unavailable")
 TRACKER_STALE=$("$VELA_DIR/scripts/tracker.sh" stale 3 2>/dev/null || echo "")
+SESSION_CONTEXT=$("$LEDGER" context 3 2>/dev/null || echo "No prior session data.")
 
 PROMPT=$(cat <<TICKEOF
 You are Vela, an autonomous AI agent. This is a tick — your regular work cycle.
@@ -101,6 +116,9 @@ Current time: $NOW_CLT
 Read IDENTITY.md for who you are.
 Read log/ for recent context (latest file first).
 Read data/improvements.yml for the self-improvement tracker — check for new patterns and update item status.
+
+EXECUTION CONTEXT (what other sessions have done recently — avoid duplicating this work):
+$SESSION_CONTEXT
 
 PROJECT TRACKER (Forgejo Issues on vela/agent — live state, not a cached file):
 $TRACKER_SUMMARY
@@ -145,6 +163,9 @@ fi
 
 echo "$NOW_ISO [START] tick ($((daily_count+1))/$MAX_DAILY_SESSIONS)" >> "$LOG_FILE"
 increment_session_count
+
+# Record in session ledger
+SESSION_ID=$("$LEDGER" start tick cron 2>/dev/null || echo "")
 
 cd "$VELA_DIR"
 claude --print --dangerously-skip-permissions -p "$PROMPT" >> "$LOG_FILE" 2>&1
