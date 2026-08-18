@@ -30,6 +30,21 @@ if [[ -z "$MESSAGE" ]]; then
     exit 1
 fi
 
+# Cooldown: block sends within 90s of the last send to prevent duplicate replies
+COOLDOWN_FILE="$VELA_DIR/data/.ntfy-last-send"
+COOLDOWN_SECS=90
+if [[ -f "$COOLDOWN_FILE" ]]; then
+    last_send=$(cat "$COOLDOWN_FILE")
+    now=$(date +%s)
+    elapsed=$(( now - last_send ))
+    if (( elapsed < COOLDOWN_SECS )); then
+        echo "[BLOCKED] ntfy send blocked — ${elapsed}s since last send (cooldown ${COOLDOWN_SECS}s). Message NOT sent." >&2
+        echo "Blocked message: $MESSAGE" >&2
+        exit 1
+    fi
+fi
+date +%s > "$COOLDOWN_FILE"
+
 curl -s "$NTFY_URL/$NTFY_TOPIC" -H "Title: $TITLE" -d "$MESSAGE"
 
 TIMESTAMP=$(date -Iseconds)
