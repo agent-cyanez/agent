@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Vela usage tracker — aggregates token usage from Claude Code session transcripts
-and optionally queries the OAuth usage endpoint for quota utilization."""
+"""Vela usage tracker — queries quota utilization (5-hour/7-day windows) and
+aggregates token counts from Claude Code session transcripts."""
 
 import json
 import os
@@ -13,12 +13,6 @@ from datetime import datetime, timedelta
 TRANSCRIPTS_DIR = os.path.expanduser("~/.claude/projects/-home-vela-agent")
 CREDENTIALS_FILE = os.path.expanduser("~/.claude/.credentials.json")
 CACHE_FILE = os.path.expanduser("~/agent/data/usage-cache.json")
-
-OPUS_INPUT_PER_MTK = 15.0
-OPUS_OUTPUT_PER_MTK = 75.0
-OPUS_CACHE_WRITE_PER_MTK = 3.75
-OPUS_CACHE_READ_PER_MTK = 1.50
-
 
 def aggregate_transcripts(days=None):
     sessions = glob.glob(os.path.join(TRANSCRIPTS_DIR, "*.jsonl"))
@@ -83,13 +77,9 @@ def aggregate_transcripts(days=None):
     return by_date
 
 
-def estimate_cost(stats):
-    cost = 0.0
-    cost += (stats["in"] / 1_000_000) * OPUS_INPUT_PER_MTK
-    cost += (stats["out"] / 1_000_000) * OPUS_OUTPUT_PER_MTK
-    cost += (stats["cache_create"] / 1_000_000) * OPUS_CACHE_WRITE_PER_MTK
-    cost += (stats["cache_read"] / 1_000_000) * OPUS_CACHE_READ_PER_MTK
-    return cost
+def _bar(pct, width=20):
+    filled = int(round(pct / 100 * width))
+    return "[" + "#" * filled + "." * (width - filled) + "]"
 
 
 def fetch_quota():
@@ -190,6 +180,8 @@ def main():
 
     by_date = aggregate_transcripts(days)
 
+    quota = fetch_quota()
+
     if json_output:
         out = {}
         for date in sorted(by_date.keys()):
@@ -201,44 +193,27 @@ def main():
                 "output_tokens": d["out"],
                 "cache_creation_tokens": d["cache_create"],
                 "cache_read_tokens": d["cache_read"],
-                "estimated_cost_usd": round(estimate_cost(d), 2),
                 "models": list(d["models"]),
             }
-
-        quota = fetch_quota()
-        result = {"daily": out, "quota": quota}
-        print(json.dumps(result, indent=2))
+        print(json.dumps({"quota": quota, "daily": out}, indent=2))
         return
 
-    print("=== Vela Usage Report ===\n")
+    print("=== Quota Utilization ===\n")
 
-    total = {"sessions": 0, "turns": 0, "in": 0, "out": 0, "cache_create": 0, "cache_read": 0}
-    for date in sorted(by_date.keys()):
-        d = by_date[date]
-        cost = estimate_cost(d)
-        for k in total:
-            total[k] += d[k]
-        models = ", ".join(d["models"] - {"<synthetic>"})
-        print(f"  {date}:  {d['sessions']:3d} sessions  {d['turns']:4d} turns  "
-              f"out: {d['out']:>10,}  ~${cost:.2f}  [{models}]")
-
-    total_cost = estimate_cost(total)
-    print(f"\n  Total:    {total['sessions']:3d} sessions  {total['turns']:4d} turns  "
-          f"out: {total['out']:>10,}  ~${total_cost:.2f}")
-    print(f"  Cache:    {total['cache_create']:>10,} created  {total['cache_read']:>10,} read")
-
-    quota = fetch_quota()
     if quota:
-        print("\n=== Account Quota ===\n")
         if "five_hour" in quota:
             fh = quota["five_hour"]
-            print(f"  5-hour window:  {fh.get('utilization', '?')}% used", end="")
+            pct = fh.get("utilization", "?")
+            bar = _bar(pct) if isinstance(pct, (int, float)) else ""
+            print(f"  5-hour window:  {bar} {pct}%", end="")
             if "resets_at" in fh:
                 print(f"  (resets: {fh['resets_at']})", end="")
             print()
         if "seven_day" in quota:
             sd = quota["seven_day"]
-            print(f"  7-day window:   {sd.get('utilization', '?')}% used", end="")
+            pct = sd.get("utilization", "?")
+            bar = _bar(pct) if isinstance(pct, (int, float)) else ""
+            print(f"  7-day window:   {bar} {pct}%", end="")
             if "resets_at" in sd:
                 print(f"  (resets: {sd['resets_at']})", end="")
             print()
@@ -252,7 +227,22 @@ def main():
             for lim in quota["limits"]:
                 print(f"  {lim.get('model', '?')}: {lim.get('utilization', '?')}% of {lim.get('window', '?')}")
     else:
-        print("\n  (Quota data unavailable — rate limited or token expired)")
+        print("  (Unavailable — rate limited or token expired. Cached hourly.)")
+
+    print("\n=== Token Usage ===\n")
+
+    total = {"sessions": 0, "turns": 0, "in": 0, "out": 0, "cache_create": 0, "cache_read": 0}
+    for date in sorted(by_date.keys()):
+        d = by_date[date]
+        for k in total:
+            total[k] += d[k]
+        models = ", ".join(d["models"] - {"<synthetic>"})
+        print(f"  {date}:  {d['sessions']:3d} sessions  {d['turns']:4d} turns  "
+              f"out: {d['out']:>10,}  [{models}]")
+
+    print(f"\n  Total:    {total['sessions']:3d} sessions  {total['turns']:4d} turns  "
+          f"out: {total['out']:>10,}")
+    print(f"  Cache:    {total['cache_create']:>10,} created  {total['cache_read']:>10,} read")
 
 
 if __name__ == "__main__":
