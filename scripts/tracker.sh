@@ -13,6 +13,7 @@
 #   tracker.sh reopen ID                             Reopen a closed task
 #   tracker.sh show ID                               Show task details
 #   tracker.sh summary                               One-line-per-task overview for tick consumption
+#   tracker.sh promote ID ["comment"]                 Move backlog → active
 
 set -euo pipefail
 
@@ -286,7 +287,23 @@ if backlog:
 if other:
     print('OTHER:')
     for e in other: print(f'  {e}')
+
+# Anti-passivity warning: if there's nothing active (only blocked/waiting), and there IS backlog, say so loudly
+if not active and (blocked or waiting) and backlog:
+    print()
+    print('WARNING: No active work — all items are blocked or waiting. Promote from backlog or find new work.')
+elif not active and not backlog and not other:
+    print()
+    print('WARNING: No active or backlog items. Survey for new work.')
 " 2>/dev/null
+}
+
+cmd_promote() {
+    local id="$1"
+    local comment="${2:-Promoted from backlog to active}"
+    cmd_unlabel "$id" "backlog" 2>/dev/null || true
+    cmd_label "$id" "active"
+    cmd_update "$id" "$comment"
 }
 
 case "${1:-}" in
@@ -301,8 +318,9 @@ case "${1:-}" in
     reopen)  shift; cmd_reopen "$@" ;;
     show)    shift; cmd_show "$@" ;;
     summary) cmd_summary ;;
+    promote) shift; cmd_promote "$@" ;;
     *)
-        echo "Usage: tracker.sh {add|list|next|stale|update|label|unlabel|close|reopen|show|summary}" >&2
+        echo "Usage: tracker.sh {add|list|next|stale|update|label|unlabel|close|reopen|show|summary|promote}" >&2
         exit 1
         ;;
 esac
