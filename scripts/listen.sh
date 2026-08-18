@@ -125,9 +125,10 @@ $full_message
 ---
 
 Respond thoughtfully. Act on requests directly — do not ask for permission or clarification unless the hard boundaries are at stake.
-When done, send your response via ntfy using the send script:
+When done, send ONE response via ntfy using the send script. Do not send progress updates — wait until all work is complete, then send a single comprehensive message:
   scripts/ntfy-send.sh 'your message body only — topic and title are automatic'
   Do NOT use raw curl for ntfy. Do NOT include the topic name or 'Vela' in the message text.
+  Do NOT call ntfy-send.sh more than once per session. The script enforces a 90s cooldown, but the real rule is: one message per patron interaction.
 Log what you did using the log-entry script (handles chronological ordering and concurrency):
   echo '- your log content' | scripts/log-entry.sh '## Session — Topic ($msg_time_clt)'
   Do NOT write to log/*.md directly — always use scripts/log-entry.sh.
