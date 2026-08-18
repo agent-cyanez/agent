@@ -96,12 +96,13 @@ $message
 ---
 
 Respond thoughtfully. Act on requests directly — do not ask for permission or clarification unless the hard boundaries are at stake.
-When done, send your response via ntfy using the send script (do NOT also use raw curl — one send only):
-  scripts/ntfy-send.sh 'your response'
-Log what you did in log/ and commit changes if any.
-
-Log entry format: use ## header with timestamp, e.g. ## Patron Message — Topic ($msg_time_clt)
-If the log file has existing entries, INSERT your entry at the correct chronological position (by comparing timestamps in ## headers), not at the end."
+When done, send your response via ntfy using the send script:
+  scripts/ntfy-send.sh 'your message body only — topic and title are automatic'
+  Do NOT use raw curl for ntfy. Do NOT include the topic name or 'Vela' in the message text.
+Log what you did using the log-entry script (handles chronological ordering and concurrency):
+  echo '- your log content' | scripts/log-entry.sh '## Session — Topic ($msg_time_clt)'
+  Do NOT write to log/*.md directly — always use scripts/log-entry.sh.
+Commit changes if any."
 
         # Night guard — defer responses between midnight and wake hour
         WAKE_HOUR=${VELA_WAKE_HOUR:-9}

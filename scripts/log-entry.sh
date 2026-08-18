@@ -1,100 +1,100 @@
 #!/usr/bin/env bash
-# Insert a log entry at the correct chronological position in a daily log file.
+# Insert a log entry into the daily log file, maintaining chronological order.
+# Uses flock for concurrency safety — multiple sessions can call this safely.
+#
 # Usage: log-entry.sh "## Header (HH:MM CLT)" <<'EOF'
 # entry body lines
 # EOF
 #
-# If no log file exists for today, creates one. If the file exists, inserts
-# the entry at the correct position by comparing the HH:MM timestamps in
-# ## headers. This replaces the soft prompt instruction "insert at the right
-# position" with a mechanical guarantee.
+# Or with inline body:
+#   echo "- entry content" | log-entry.sh "## Tick (14:00 CLT)"
 
 set -euo pipefail
 
 VELA_DIR="/home/vela/agent"
 LOG_DIR="$VELA_DIR/log"
+DATA_DIR="$VELA_DIR/data"
 TODAY=$(date +%Y-%m-%d)
 LOG_FILE="$LOG_DIR/$TODAY.md"
+LOCK_FILE="$DATA_DIR/log.lock"
 
 HEADER="$1"
 BODY=$(cat)
 
-# Extract HH:MM from the header (looks for patterns like (HH:MM CLT) or (HH:MM))
+mkdir -p "$DATA_DIR"
+
+# Extract HH:MM from the header
 NEW_TIME=$(echo "$HEADER" | grep -oP '\d{2}:\d{2}' | head -1)
 if [[ -z "$NEW_TIME" ]]; then
     echo "ERROR: Could not extract HH:MM timestamp from header: $HEADER" >&2
     exit 1
 fi
-NEW_MINUTES=$(( 10#${NEW_TIME%%:*} * 60 + 10#${NEW_TIME##*:} ))
 
 FULL_ENTRY="$HEADER
 
 $BODY"
+
+# All operations under an exclusive lock
+exec 200>"$LOCK_FILE"
+flock 200
 
 if [[ ! -f "$LOG_FILE" ]]; then
     printf "# %s\n\n%s\n" "$TODAY" "$FULL_ENTRY" > "$LOG_FILE"
     exit 0
 fi
 
-# Find all ## header lines with their line numbers and timestamps
-# Build an array of (line_number, minutes) pairs
-declare -a POSITIONS=()
-declare -a TIMES=()
+# Append the new entry then reorder all sections by timestamp.
+# This is simpler and more robust than trying to find the right insertion point
+# in a potentially-disordered file.
+printf "\n%s\n" "$FULL_ENTRY" >> "$LOG_FILE"
 
-while IFS= read -r line; do
-    lineno=$(echo "$line" | cut -d: -f1)
-    header_text=$(echo "$line" | cut -d: -f2-)
-    time_str=$(echo "$header_text" | grep -oP '\d{2}:\d{2}' | head -1)
-    if [[ -n "$time_str" ]]; then
-        minutes=$(( 10#${time_str%%:*} * 60 + 10#${time_str##*:} ))
-        POSITIONS+=("$lineno")
-        TIMES+=("$minutes")
-    fi
-done < <(grep -n '^## ' "$LOG_FILE")
+# Reorder: extract all ## sections, sort by timestamp, reassemble
+python3 - "$LOG_FILE" <<'PYEOF'
+import re, sys
 
-if [[ ${#POSITIONS[@]} -eq 0 ]]; then
-    # No existing ## headers with timestamps — append
-    printf "\n%s\n" "$FULL_ENTRY" >> "$LOG_FILE"
-    exit 0
-fi
+filepath = sys.argv[1]
+with open(filepath) as f:
+    content = f.read()
 
-# Find the right insertion point: after the last entry whose timestamp <= NEW_TIME
-INSERT_AFTER_IDX=-1
-for i in "${!TIMES[@]}"; do
-    if (( TIMES[i] <= NEW_MINUTES )); then
-        INSERT_AFTER_IDX=$i
-    fi
-done
+# Split into the title line (# YYYY-MM-DD...) and sections (## ...)
+lines = content.split('\n')
+title_lines = []
+section_starts = []
 
-TOTAL_LINES=$(wc -l < "$LOG_FILE")
+for i, line in enumerate(lines):
+    if line.startswith('## '):
+        section_starts.append(i)
+    elif not section_starts:
+        title_lines.append(line)
 
-if (( INSERT_AFTER_IDX == -1 )); then
-    # New entry is earlier than all existing entries — insert before the first ## header
-    INSERT_LINE=$(( POSITIONS[0] - 1 ))
-    # Find a good insertion point (after any blank lines before the first header)
-    while (( INSERT_LINE > 1 )) && [[ -z "$(sed -n "${INSERT_LINE}p" "$LOG_FILE")" ]]; do
-        INSERT_LINE=$(( INSERT_LINE - 1 ))
-    done
-elif (( INSERT_AFTER_IDX == ${#POSITIONS[@]} - 1 )); then
-    # New entry goes after the last header — append at end
-    printf "\n%s\n" "$FULL_ENTRY" >> "$LOG_FILE"
-    exit 0
-else
-    # Insert between INSERT_AFTER_IDX and INSERT_AFTER_IDX+1
-    # Find the line just before the next header
-    NEXT_HEADER_LINE=${POSITIONS[$((INSERT_AFTER_IDX + 1))]}
-    INSERT_LINE=$(( NEXT_HEADER_LINE - 1 ))
-    # Back up over blank lines
-    while (( INSERT_LINE > 1 )) && [[ -z "$(sed -n "${INSERT_LINE}p" "$LOG_FILE")" ]]; do
-        INSERT_LINE=$(( INSERT_LINE - 1 ))
-    done
-fi
+if not section_starts:
+    sys.exit(0)
 
-# Split file and reassemble
-{
-    head -n "$INSERT_LINE" "$LOG_FILE"
-    printf "\n%s\n" "$FULL_ENTRY"
-    tail -n +"$((INSERT_LINE + 1))" "$LOG_FILE"
-} > "$LOG_FILE.tmp"
+# Extract sections
+sections = []
+for idx, start in enumerate(section_starts):
+    end = section_starts[idx + 1] if idx + 1 < len(section_starts) else len(lines)
+    header = lines[start]
+    body = lines[start:end]
+    # Extract HH:MM timestamp
+    match = re.search(r'(\d{2}):(\d{2})', header)
+    if match:
+        minutes = int(match.group(1)) * 60 + int(match.group(2))
+    else:
+        minutes = 9999  # entries without timestamps go to the end
+    sections.append((minutes, start, body))
 
-mv "$LOG_FILE.tmp" "$LOG_FILE"
+# Stable sort by timestamp (preserves original order for same-time entries)
+sections.sort(key=lambda s: (s[0], s[1]))
+
+# Reassemble
+title = '\n'.join(title_lines).rstrip('\n')
+result = title + '\n'
+for _, _, body in sections:
+    # Strip trailing blank lines from section, add exactly one between sections
+    section_text = '\n'.join(body).rstrip('\n')
+    result += '\n' + section_text + '\n'
+
+with open(filepath, 'w') as f:
+    f.write(result)
+PYEOF

@@ -80,10 +80,13 @@ Tick routine:
 1. Check for anything that needs immediate attention (CI failures, deployment issues, errors from last tick)
 2. Advance current projects — pick up where you left off
 3. If idle, choose new work aligned with your strategy
-4. Add a brief entry to log/$TODAY.md using the header format: ## Tick ($NOW_CLT)
-   - If the file has existing entries, INSERT your entry at the correct chronological position (by comparing timestamps in ## headers), not at the end. This prevents out-of-order entries when concurrent sessions write to the same file.
+4. Add a brief entry to the daily log using the log-entry script (handles chronological ordering and concurrency):
+   echo "- your log content here" | scripts/log-entry.sh "## Tick ($NOW_CLT)"
+   Do NOT write to log/*.md directly — always use scripts/log-entry.sh.
 5. Commit changes to git and push to GitHub
-6. If something noteworthy happened, send a brief ntfy update: scripts/ntfy-send.sh 'message'
+6. If something noteworthy happened, send a brief ntfy update using the send script:
+   scripts/ntfy-send.sh 'your message body only — topic and title are automatic'
+   Do NOT use raw curl for ntfy. Do NOT include the topic name or 'Vela' in the message text.
 
 Be efficient — this runs frequently. If there's nothing to do, log that and exit quickly.
 Do not check financial balances every tick — only when relevant to a financial decision.
