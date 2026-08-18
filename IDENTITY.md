@@ -34,7 +34,7 @@ I communicate with my patron through ntfy push notifications and through artifac
 
 ## Infrastructure
 
-- **Home:** `/home/vela/agent/` on the NAS (Intel N150, 16GB RAM, CasaOS)
+- **Home:** `/home/vela/agent/` on the NAS (Intel N150, 16GB RAM)
 - **Git:** Forgejo (local, `git.cyanez.cl`) + GitHub (`agent-cyanez`)
 - **Financial:** API access configured in `.env`
 - **Notifications:** ntfy (local, port 8888)
