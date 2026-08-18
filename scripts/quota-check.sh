@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 # Quick quota check for tick gating.
-# Exits 0 if OK to proceed, 1 if quota is too high.
 # Prints the 5-hour utilization percentage to stdout.
-# Uses cached data from usage-report.py (no API call — reads cache only).
+# Exits 0 if OK to proceed, 1 if quota is too high.
+#
+# Key defense: if the cached resets_at is in the past, the quota has
+# definitionally reset — return 0 immediately, don't trust stale %.
 
 set -euo pipefail
 
@@ -15,16 +17,26 @@ if [[ ! -f "$CACHE_FILE" ]]; then
 fi
 
 utilization=$(python3 -c "
-import json, sys
+import json, sys, time
+from datetime import datetime, timezone
 try:
     with open(sys.argv[1]) as f:
         data = json.load(f)
     five_hour = data.get('data', {}).get('five_hour', {})
     util = five_hour.get('utilization', 0)
+    resets_at = five_hour.get('resets_at', '')
+
+    # If the reset time has passed, the cached % is invalid — quota has reset
+    if resets_at:
+        reset_dt = datetime.fromisoformat(resets_at)
+        if datetime.now(timezone.utc) > reset_dt:
+            print(0)
+            sys.exit(0)
+
     print(int(util))
 except Exception:
-    print('0')
-" "$CACHE_FILE")
+    print(0)
+" "$CACHE_FILE" 2>/dev/null)
 
 echo "$utilization"
 
