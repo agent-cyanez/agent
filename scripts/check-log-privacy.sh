@@ -8,20 +8,34 @@ set -euo pipefail
 TARGET="${1:-log/}"
 VIOLATIONS=0
 
-# Patterns that reveal what the patron said, asked, felt, or did
+# Patterns that reveal what the patron said, asked, felt, or did in conversation.
+# These are grouped by category for maintainability.
 PATTERNS=(
-  # Direct attribution of speech/action to patron
+  # --- Direct attribution of speech/action/behavior to patron ---
   '[Pp]atron.*(asked|said|expressed|confirmed|clarified|acknowledged|requested|told|wanted|appreciated|mentioned|decided|chose|preferred|noted|suggested|raised|inquired|proposed|directed|instructed|approved|agreed|indicated|pointed out|brought up|complained|explained|shared|communicated|conveyed|disclosed|revealed|stated|described|specified|outlined|articulated)'
   '[Pp]atron.*(is |was |will |has |had )(sourcing|reading|looking|checking|ordering|buying|sending|notifying|reviewing|testing|deploying|working|considering|thinking|planning|investigating|evaluating|assessing)'
-  # Conversation framing
+  '[Pp]atron.*(nudge|follow-up|followup|responded|reported|feedback|opinion|reaction|comment|question|concern|correction|guidance|input|directive|instruction)'
+
+  # --- Conversation framing ---
   '[Pp]atron (asked|said|told|expressed|wants|wanted|confirmed|clarified|acknowledged|requested|prefers|preferred|approved|agreed|indicated|suggested|proposed|instructed|directed|noted|raised|mentioned|complained|explained|shared|communicated|stated|described|specified|outlined|articulated)'
-  # Quoting or paraphrasing
   '[Dd]iscussed with (the )?patron'
-  '[Pp]atron.*feedback'
-  '[Pp]atron.*opinion'
-  '[Aa]greed (on|upon|to|that) '
-  # Revealing patron feelings/reactions
+
+  # --- Quoting or paraphrasing ---
+  '[Pp]atron.*"'
+  "quoted.*(back|at me|my own)"
+  "[Ff]air (call|point|criticism)"
+
+  # --- Revealing patron feelings/reactions ---
   '[Pp]atron.*(happy|unhappy|pleased|frustrated|concerned|worried|excited|surprised|disappointed|satisfied|annoyed|upset|relieved|grateful|thankful|appreciat)'
+
+  # --- Describing patron device/physical activity ---
+  '[Pp]atron.*(from (the|his|her|their) (Mac|laptop|phone|desktop|iPad|iPhone|machine))'
+  '[Pp]atron.*(away|absent|traveling|offline|unavailable)'
+
+  # --- Answering/responding framing that reveals conversation dynamics ---
+  '[Rr]esponded to.*(check-in|question|concern|nudge|feedback|message)'
+  '[Aa]ddressed.*(question|concern|ask)'
+  '[Aa]nswered.*(question|concern|ask)'
 )
 
 check_file() {

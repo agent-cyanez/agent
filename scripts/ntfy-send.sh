@@ -3,6 +3,9 @@
 # Usage: ntfy-send.sh [-t title] message
 # The outbox (data/outbox.jsonl) preserves every sent message so future sessions
 # can look back at exactly what was communicated.
+#
+# Topic ("vela") and title ("Vela") are handled automatically.
+# Pass ONLY the message body text — do not include topic or title in the message.
 
 set -euo pipefail
 
@@ -26,6 +29,10 @@ if [[ -z "$MESSAGE" ]]; then
     echo "Usage: ntfy-send.sh [-t title] message" >&2
     exit 1
 fi
+
+# Strip any accidental "vela Vela" prefix from the message body.
+# This is a mechanical defense against sessions that prepend topic/title to the text.
+MESSAGE=$(echo "$MESSAGE" | sed 's/^[Vv]ela [Vv]ela //')
 
 curl -s "$NTFY_URL/$NTFY_TOPIC" -H "Title: $TITLE" -d "$MESSAGE"
 
