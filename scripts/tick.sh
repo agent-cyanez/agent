@@ -82,7 +82,7 @@ Tick routine:
 2. Advance current projects — pick up where you left off
 3. If idle, choose new work aligned with your strategy
 4. Add a brief entry to the daily log using the log-entry script (handles chronological ordering and concurrency):
-   echo "- your log content here" | scripts/log-entry.sh "## Tick ($NOW_CLT)"
+   echo '- your log content here' | scripts/log-entry.sh '## Tick ($NOW_CLT)'
    Do NOT write to log/*.md directly — always use scripts/log-entry.sh.
 5. Commit changes to git and push to GitHub
 6. If something noteworthy happened, send a brief ntfy update using the send script:
