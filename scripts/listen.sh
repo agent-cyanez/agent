@@ -52,10 +52,17 @@ if [[ -f "$LOCK_FILE" ]]; then
     rm -f "$LOCK_FILE"
 fi
 
+# Kill any orphaned listener processes (covers cases where lock file was lost)
+while IFS= read -r pid; do
+    [[ "$pid" -eq "$$" ]] && continue
+    echo "Killing orphaned listener (pid=$pid)"
+    kill "$pid" 2>/dev/null || true
+done < <(pgrep -f "bash.*/scripts/listen\.sh" 2>/dev/null || true)
+
 echo $$ > "$LOCK_FILE"
 trap cleanup EXIT
 
-log "[START] listening on $NTFY_URL/$NTFY_TOPIC"
+log "[START] listening on $NTFY_URL/$NTFY_TOPIC (killed orphaned listeners if any)"
 
 # Stream messages from ntfy using server-sent events
 while true; do
