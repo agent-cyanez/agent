@@ -18,6 +18,17 @@ fi
 URL="${1:?Usage: browse.sh <url> [selector]}"
 SELECTOR="${2:-body}"
 BROWSERLESS_URL="http://127.0.0.1:3100"
+ALLOWLIST="$AGENT_DIR/config/domain-allowlist.txt"
+
+# Extract domain from URL and check against allowlist
+DOMAIN=$(echo "$URL" | sed -E 's|^https?://||' | sed 's|/.*||' | sed 's|:.*||')
+if [ -f "$ALLOWLIST" ]; then
+    if ! grep -qxF "$DOMAIN" <(grep -v '^#' "$ALLOWLIST" | grep -v '^$'); then
+        echo "BLOCKED: domain '$DOMAIN' is not on the allowlist ($ALLOWLIST)" >&2
+        echo "To allow this domain, add it to $ALLOWLIST" >&2
+        exit 1
+    fi
+fi
 
 curl -s "${BROWSERLESS_URL}/content?token=${BROWSERLESS_TOKEN}" \
   -H 'Content-Type: application/json' \

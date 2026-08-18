@@ -1,0 +1,34 @@
+# Domains Vela is allowed to fetch via browse.sh
+# One domain per line. Subdomains are matched automatically
+# (e.g. "github.com" allows "raw.githubusercontent.com" won't match — add it explicitly).
+# Lines starting with # are comments.
+
+# Code hosting & packages
+github.com
+raw.githubusercontent.com
+gist.githubusercontent.com
+objects.githubusercontent.com
+pypi.org
+npmjs.com
+crates.io
+pkg.go.dev
+
+# Documentation
+docs.docker.com
+docs.github.com
+docs.python.org
+developer.mozilla.org
+docs.anthropic.com
+docs.ntfy.sh
+tailscale.com
+forgejo.org
+restic.readthedocs.io
+wiki.archlinux.org
+
+# Reference
+en.wikipedia.org
+stackoverflow.com
+
+# Own infrastructure
+git.cyanez.cl
+status.cyanez.cl
