@@ -46,7 +46,7 @@ for h in hooks:
                 \"secret\": \"$WEBHOOK_SECRET\"
             },
             \"events\": [\"push\"],
-            \"branch_filter\": \"master main\",
+            \"branch_filter\": \"{master,main}\",
             \"active\": true
         }" \
         "$FORGEJO_URL/api/v1/repos/Nosferath/$repo/hooks" 2>&1)
