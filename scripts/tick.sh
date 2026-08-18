@@ -98,6 +98,20 @@ if [[ -f "$TIMING_FILE" ]]; then
     fi
 fi
 
+# Refresh quota cache if stale (>30 min) — keeps data fresh for the gate below
+USAGE_CACHE="$DATA_DIR/usage-cache.json"
+cache_age=$(python3 -c "
+import json, time, sys
+try:
+    with open(sys.argv[1]) as f:
+        print(int(time.time() - json.load(f).get('fetched_at', 0)))
+except Exception:
+    print(9999)
+" "$USAGE_CACHE" 2>/dev/null) || cache_age=9999
+if (( cache_age > 1800 )); then
+    python3 "$VELA_DIR/scripts/usage-report.py" --force >/dev/null 2>&1 &
+fi
+
 # Quota gate — skip tick if 5-hour quota utilization exceeds threshold
 quota_pct=$("$VELA_DIR/scripts/quota-check.sh" "$QUOTA_THRESHOLD" 2>/dev/null) || true
 if [[ -n "$quota_pct" ]] && (( quota_pct > QUOTA_THRESHOLD )); then
