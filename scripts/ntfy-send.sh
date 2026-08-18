@@ -30,10 +30,6 @@ if [[ -z "$MESSAGE" ]]; then
     exit 1
 fi
 
-# Strip any accidental "vela Vela" prefix from the message body.
-# This is a mechanical defense against sessions that prepend topic/title to the text.
-MESSAGE=$(echo "$MESSAGE" | sed 's/^[Vv]ela [Vv]ela //')
-
 curl -s "$NTFY_URL/$NTFY_TOPIC" -H "Title: $TITLE" -d "$MESSAGE"
 
 TIMESTAMP=$(date -Iseconds)
