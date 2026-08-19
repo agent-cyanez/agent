@@ -181,6 +181,9 @@ increment_session_count
 # Record in session ledger
 SESSION_ID=$("$LEDGER" start tick cron 2>/dev/null || echo "")
 
+# Sync repo clones before session starts (prevents stale-code drift)
+"$VELA_DIR/scripts/sync-repos.sh" >> "$LOG_FILE" 2>&1 || true
+
 cd "$VELA_DIR"
 claude --print --dangerously-skip-permissions -p "$PROMPT" >> "$LOG_FILE" 2>&1
 exit_code=$?
