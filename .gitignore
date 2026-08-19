@@ -3,3 +3,4 @@ data/
 projects/
 patches/
 INTERACTION_GUIDELINES.md
+__pycache__/
