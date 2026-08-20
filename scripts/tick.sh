@@ -119,6 +119,23 @@ if [[ -n "$quota_pct" ]] && (( quota_pct > QUOTA_THRESHOLD )); then
     exit 0
 fi
 
+# Quiet throttle — back off when consecutive ticks produce no work
+QUIET_STREAK_FILE="$DATA_DIR/quiet-streak.count"
+QUIET_BACKOFF_AFTER=${VELA_QUIET_BACKOFF:-3}
+QUIET_INTERVAL=${VELA_QUIET_INTERVAL:-1800}
+LAST_TICK_FILE="$DATA_DIR/last-tick.epoch"
+
+quiet_streak=$(cat "$QUIET_STREAK_FILE" 2>/dev/null || echo 0)
+if (( quiet_streak >= QUIET_BACKOFF_AFTER )); then
+    last_tick_epoch=$(cat "$LAST_TICK_FILE" 2>/dev/null || echo 0)
+    elapsed=$(( NOW_EPOCH - last_tick_epoch ))
+    if (( elapsed < QUIET_INTERVAL )); then
+        echo "$NOW_ISO [QUIET] streak=$quiet_streak, ${elapsed}s since last tick (need ${QUIET_INTERVAL}s)" >> "$LOG_FILE"
+        exit 0
+    fi
+fi
+echo "$NOW_EPOCH" > "$LAST_TICK_FILE"
+
 TRACKER_SUMMARY=$("$VELA_DIR/scripts/tracker.sh" summary 2>/dev/null || echo "Tracker unavailable")
 TRACKER_STALE=$("$VELA_DIR/scripts/tracker.sh" stale 3 2>/dev/null || echo "")
 SESSION_CONTEXT=$("$LEDGER" context 3 2>/dev/null || echo "No prior session data.")
@@ -187,5 +204,13 @@ SESSION_ID=$("$LEDGER" start tick cron 2>/dev/null || echo "")
 cd "$VELA_DIR"
 claude --print --dangerously-skip-permissions -p "$PROMPT" >> "$LOG_FILE" 2>&1
 exit_code=$?
+
+# Update quiet streak based on what this tick produced
+last_msg=$(git -C "$VELA_DIR" log -1 --format=%s 2>/dev/null || echo "")
+if [[ "$last_msg" == *"quiet"* ]]; then
+    echo $(( $(cat "$QUIET_STREAK_FILE" 2>/dev/null || echo 0) + 1 )) > "$QUIET_STREAK_FILE"
+else
+    echo 0 > "$QUIET_STREAK_FILE"
+fi
 
 echo "$(date -Iseconds) [END] tick (exit=$exit_code)" >> "$LOG_FILE"
