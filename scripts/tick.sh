@@ -82,7 +82,7 @@ if [[ -f "$TIMING_FILE" ]]; then
         if [[ "$dur" == "0" ]]; then
             # Check if it was a legitimate skip
             if grep -qF "$ts" "$LOG_FILE" 2>/dev/null && \
-               grep "$ts" "$LOG_FILE" 2>/dev/null | grep -qE '\[(BUDGET|SLEEP|SKIP|QUOTA)\]'; then
+               grep "$ts" "$LOG_FILE" 2>/dev/null | grep -qE '\[(BUDGET|SLEEP|SKIP|QUOTA|QUIET)\]'; then
                 consecutive_zeros=0
             else
                 consecutive_zeros=$((consecutive_zeros + 1))
