@@ -1,0 +1,15 @@
+[Unit]
+Description=Restic backup to local drive (500GB, permanent)
+After=local-fs.target
+
+[Service]
+Type=oneshot
+User=vela
+Group=vela
+ExecStart=/home/vela/agent/scripts/backup.sh run local
+AmbientCapabilities=CAP_DAC_READ_SEARCH
+CapabilityBoundingSet=CAP_DAC_READ_SEARCH
+Nice=10
+IOSchedulingClass=idle
+TimeoutStartSec=3h
+Environment=HOME=/home/vela

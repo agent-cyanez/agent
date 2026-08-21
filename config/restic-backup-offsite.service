@@ -1,0 +1,15 @@
+[Unit]
+Description=Restic backup to offsite drive (1TB, on-demand before rotation)
+After=local-fs.target
+
+[Service]
+Type=oneshot
+User=vela
+Group=vela
+ExecStart=/home/vela/agent/scripts/backup.sh run offsite
+AmbientCapabilities=CAP_DAC_READ_SEARCH
+CapabilityBoundingSet=CAP_DAC_READ_SEARCH
+Nice=10
+IOSchedulingClass=idle
+TimeoutStartSec=6h
+Environment=HOME=/home/vela

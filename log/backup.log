@@ -1,0 +1,102 @@
+[2026-08-20 16:40:09] offsite drive ready at /mnt/backup-offsite
+[2026-08-20 16:40:09] Initializing restic repo on offsite
+[2026-08-20 16:40:29] offsite drive ready at /mnt/backup-offsite
+[2026-08-20 16:40:29] Initializing restic repo on offsite
+[2026-08-20 16:40:35] Restic repo initialized on offsite
+[2026-08-20 16:40:40] offsite drive ready at /mnt/backup-offsite
+[2026-08-20 16:40:40] Starting backup to offsite
+open repository
+no parent snapshot found, will read all files
+load index files
+start scan on [/home/nosferath/projects /home/nosferath/Zettelkasten /home/nosferath/tools /home/nosferath/ubc /home/nosferath/aws /home/nosferath/dotfiles /home/nosferath/data /DATA/3D Prints /DATA/Gallery /DATA/Media]
+start backup on [/home/nosferath/projects /home/nosferath/Zettelkasten /home/nosferath/tools /home/nosferath/ubc /home/nosferath/aws /home/nosferath/dotfiles /home/nosferath/data /DATA/3D Prints /DATA/Gallery /DATA/Media]
+error: open /DATA/3D Prints/Artisan Guild Patreon.7z: permission denied
+scan: openfile for readdirnames failed: open /DATA/Media/TV Shows/Louis CK: permission denied
+error: open /DATA/Gallery/dji_fly_20260213_192426_78_1771024221692_video.mp4: permission denied
+error: open /DATA/Media/Movies/La Clase/La Clase - 01 - Cómo partir una startup.mp4: permission denied
+error: openfile for readdirnames failed: open /DATA/Media/TV Shows/Louis CK: permission denied
+scan: openfile for readdirnames failed: open /home/nosferath/projects/forgejo/data/git/.ssh: permission denied
+scan: openfile for readdirnames failed: open /home/nosferath/projects/forgejo/data/gitea/indexers/issues.bleve: permission denied
+scan: openfile for readdirnames failed: open /home/nosferath/projects/forgejo/data/ssh: permission denied
+scan: openfile for readdirnames failed: open /home/nosferath/projects/immich/data/postgres: permission denied
+scan: openfile for readdirnames failed: open /home/nosferath/projects/syncthing/data/config: permission denied
+scan finished in 6.164s: 123563 files, 163.539 GiB
+error: openfile for readdirnames failed: open /home/nosferath/projects/forgejo/data/git/.ssh: permission denied
+error: open /home/nosferath/projects/forgejo/data/gitea/actions_id_token/private.pem: permission denied
+error: openfile for readdirnames failed: open /home/nosferath/projects/forgejo/data/gitea/indexers/issues.bleve: permission denied
+error: open /home/nosferath/projects/forgejo/data/gitea/sessions/3/3/33d2ddc310533c8d: permission denied
+error: open /home/nosferath/projects/forgejo/data/gitea/sessions/5/d/5d9d23a2340af7b1: permission denied
+error: open /home/nosferath/projects/forgejo/data/gitea/sessions/6/b/6b5f8d5072e656a9: permission denied
+error: open /home/nosferath/projects/forgejo/data/gitea/sessions/a/0/a0ffdb1bca626b04: permission denied
+error: open /home/nosferath/projects/forgejo/data/gitea/sessions/a/b/ab248727b8a03d94: permission denied
+error: open /home/nosferath/projects/forgejo/data/gitea/sessions/d/7/d7160f6c5667210c: permission denied
+error: open /home/nosferath/projects/forgejo/data/gitea/sessions/f/0/f07138881b38884c: permission denied
+error: open /home/nosferath/projects/forgejo/data/gitea/sessions/f/c/fc705c63aa10a114: permission denied
+error: openfile for readdirnames failed: open /home/nosferath/projects/forgejo/data/ssh: permission denied
+error: openfile for readdirnames failed: open /home/nosferath/projects/immich/data/postgres: permission denied
+error: openfile for readdirnames failed: open /home/nosferath/projects/syncthing/data/config: permission denied
+
+Files:       123551 new,     0 changed,     0 unmodified
+Dirs:        41324 new,     0 changed,     0 unmodified
+Data Blobs:  207848 new
+Tree Blobs:  40660 new
+Added to the repository: 146.405 GiB (141.887 GiB stored)
+
+processed 123551 files, 153.532 GiB in 3:47:24
+snapshot 3aefcac3 saved
+Warning: at least one source file could not be read
+[2026-08-21 09:24:13] ERROR: /dev/sda not found — is the drive connected?
+[2026-08-21 09:51:33] local drive ready at /mnt/backup-local
+[2026-08-21 09:51:33] Starting backup to local
+open repository
+no parent snapshot found, will read all files
+load index files
+start scan on [/home/nosferath/projects /home/nosferath/Zettelkasten /home/nosferath/tools /home/nosferath/ubc /home/nosferath/aws /home/nosferath/dotfiles /home/nosferath/data /DATA/3D Prints /DATA/Gallery /DATA/Media]
+start backup on [/home/nosferath/projects /home/nosferath/Zettelkasten /home/nosferath/tools /home/nosferath/ubc /home/nosferath/aws /home/nosferath/dotfiles /home/nosferath/data /DATA/3D Prints /DATA/Gallery /DATA/Media]
+scan finished in 8.344s: 125478 files, 182.046 GiB
+
+Files:       125482 new,     0 changed,     0 unmodified
+Dirs:        41385 new,     0 changed,     0 unmodified
+Data Blobs:  228033 new
+Tree Blobs:  40712 new
+Added to the repository: 173.218 GiB (167.997 GiB stored)
+
+processed 125482 files, 182.049 GiB in 1:27:30
+snapshot 3f0c8be1 saved
+[2026-08-21 11:19:04] Backup to local complete
+[2026-08-21 11:19:04] Dumping Docker volumes
+[2026-08-21 11:19:04] Backing up volume: blog_storage
+[2026-08-21 11:19:05] Backing up volume: forgejo_docker_certs
+[2026-08-21 11:19:06] Backing up volume: kamal-proxy-config
+[2026-08-21 11:19:06] Backing up volume: beacon_beacon-data
+[2026-08-21 11:19:07] Docker volume dumps complete
+[2026-08-21 11:19:07] Running retention policy on local (keep 7 daily, 4 weekly, 6 monthly)
+Applying Policy: keep 7 daily, 4 weekly, 6 monthly snapshots
+keep 1 snapshots:
+ID        Time                 Host        Tags        Reasons           Paths                         Size
+------------------------------------------------------------------------------------------------------------------
+3f0c8be1  2026-08-21 09:51:33  nos-nas     local       daily snapshot    /DATA/3D Prints               182.049 GiB
+                                                       weekly snapshot   /DATA/Gallery
+                                                       monthly snapshot  /DATA/Media
+                                                                         /home/nosferath/Zettelkasten
+                                                                         /home/nosferath/aws
+                                                                         /home/nosferath/data
+                                                                         /home/nosferath/dotfiles
+                                                                         /home/nosferath/projects
+                                                                         /home/nosferath/tools
+                                                                         /home/nosferath/ubc
+------------------------------------------------------------------------------------------------------------------
+Timestamps shown in local time
+1 snapshots
+
+[2026-08-21 11:19:08] Retention policy applied on local
+[2026-08-21 12:12:11] local drive ready at /mnt/backup-local
+[2026-08-21 12:12:11] Verifying local repo integrity
+using temporary cache in /tmp/restic-check-cache-609409998
+create exclusive lock for repository
+load indexes
+check all packs
+check snapshots, trees and blobs
+[0:02] 100.00%  1 / 1 snapshots
+no errors were found
+[2026-08-21 12:12:17] Verification of local complete
