@@ -155,3 +155,69 @@ Timestamps shown in local time
 2 snapshots
 
 [2026-08-22 03:09:37] Retention policy applied on local
+[2026-08-23 03:20:38] local drive ready at /mnt/backup-local
+[2026-08-23 03:20:38] Starting backup to local
+open repository
+using parent snapshot a587d0ba
+load index files
+start scan on [/home/nosferath/projects /home/nosferath/Zettelkasten /home/nosferath/tools /home/nosferath/ubc /home/nosferath/aws /home/nosferath/dotfiles /home/nosferath/data /DATA/3D Prints /DATA/Gallery /DATA/Media]
+start backup on [/home/nosferath/projects /home/nosferath/Zettelkasten /home/nosferath/tools /home/nosferath/ubc /home/nosferath/aws /home/nosferath/dotfiles /home/nosferath/data /DATA/3D Prints /DATA/Gallery /DATA/Media]
+scan finished in 12.493s: 125404 files, 181.501 GiB
+
+Files:         442 new,   237 changed, 124725 unmodified
+Dirs:          157 new,   566 changed, 40469 unmodified
+Data Blobs:   1532 new
+Tree Blobs:    709 new
+Added to the repository: 1.179 GiB (1.042 GiB stored)
+
+processed 125404 files, 181.501 GiB in 0:46
+snapshot 0ac6feb3 saved
+[2026-08-23 03:21:24] Backup to local complete
+[2026-08-23 03:21:24] Dumping Docker volumes
+[2026-08-23 03:21:24] Backing up volume: blog_storage
+[2026-08-23 03:21:26] Backing up volume: forgejo_docker_certs
+[2026-08-23 03:21:26] Backing up volume: kamal-proxy-config
+[2026-08-23 03:21:27] Backing up volume: beacon_beacon-data
+[2026-08-23 03:21:28] Docker volume dumps complete
+[2026-08-23 03:21:28] Running retention policy on local (keep 7 daily, 4 weekly, 6 monthly)
+Applying Policy: keep 7 daily, 4 weekly, 6 monthly snapshots
+keep 3 snapshots:
+ID        Time                 Host        Tags        Reasons                  Paths                         Size
+-------------------------------------------------------------------------------------------------------------------------
+3f0c8be1  2026-08-21 09:51:33  nos-nas     local       daily snapshot           /DATA/3D Prints               182.049 GiB
+                                                       oldest weekly snapshot   /DATA/Gallery
+                                                       oldest monthly snapshot  /DATA/Media
+                                                                                /home/nosferath/Zettelkasten
+                                                                                /home/nosferath/aws
+                                                                                /home/nosferath/data
+                                                                                /home/nosferath/dotfiles
+                                                                                /home/nosferath/projects
+                                                                                /home/nosferath/tools
+                                                                                /home/nosferath/ubc
+
+a587d0ba  2026-08-22 03:08:56  nos-nas     local       daily snapshot           /DATA/3D Prints               182.670 GiB
+                                                                                /DATA/Gallery
+                                                                                /DATA/Media
+                                                                                /home/nosferath/Zettelkasten
+                                                                                /home/nosferath/aws
+                                                                                /home/nosferath/data
+                                                                                /home/nosferath/dotfiles
+                                                                                /home/nosferath/projects
+                                                                                /home/nosferath/tools
+                                                                                /home/nosferath/ubc
+
+0ac6feb3  2026-08-23 03:20:38  nos-nas     local       daily snapshot           /DATA/3D Prints               181.501 GiB
+                                                       weekly snapshot          /DATA/Gallery
+                                                       monthly snapshot         /DATA/Media
+                                                                                /home/nosferath/Zettelkasten
+                                                                                /home/nosferath/aws
+                                                                                /home/nosferath/data
+                                                                                /home/nosferath/dotfiles
+                                                                                /home/nosferath/projects
+                                                                                /home/nosferath/tools
+                                                                                /home/nosferath/ubc
+-------------------------------------------------------------------------------------------------------------------------
+Timestamps shown in local time
+3 snapshots
+
+[2026-08-23 03:21:29] Retention policy applied on local
