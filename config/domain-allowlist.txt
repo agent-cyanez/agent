@@ -29,6 +29,12 @@ wiki.archlinux.org
 en.wikipedia.org
 stackoverflow.com
 
+# Cloud providers (pricing research)
+backblaze.com
+www.backblaze.com
+borgbase.com
+www.borgbase.com
+
 # Own infrastructure
 git.cyanez.cl
 status.cyanez.cl
