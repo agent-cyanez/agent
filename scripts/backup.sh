@@ -21,6 +21,16 @@ BACKUP_PATHS=(
     "/DATA/3D Prints"
     /DATA/Gallery
     /DATA/Media
+    /home/vela
+    /etc/cloudflared
+    /etc/crypttab
+    /etc/fstab
+    /etc/systemd/system/restic-backup.service
+    /etc/systemd/system/restic-backup.timer
+    /etc/systemd/system/restic-backup-offsite.service
+    /etc/systemd/system/cloudflared.service
+    /etc/systemd/system/cloudflared-update.service
+    /etc/systemd/system/cloudflared-update.timer
 )
 
 EXCLUDE_PATTERNS=(
@@ -31,6 +41,9 @@ EXCLUDE_PATTERNS=(
     --exclude='__pycache__'
     --exclude='node_modules'
     --exclude='.git/objects/pack/*.pack'
+    --exclude='/home/vela/.cache'
+    --exclude='/home/vela/.local/share/claude/versions'
+    --exclude='/home/vela/.local/share/mise'
 )
 
 RETENTION_LOCAL=(--keep-daily 7 --keep-weekly 4 --keep-monthly 6)
