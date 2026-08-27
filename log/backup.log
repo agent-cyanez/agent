@@ -597,3 +597,6 @@ Timestamps shown in local time
 [2026-08-27 03:10:53] Retention policy applied on local
 [2026-08-27 16:04:13] local drive ready at /mnt/backup-local
 [2026-08-27 16:04:14] offsite drive ready at /mnt/backup-offsite
+[2026-08-27 17:36:34] Unmounting /mnt/backup-offsite
+[2026-08-27 17:36:38] Closing LUKS backup-offsite
+[2026-08-27 17:36:38] offsite drive locked

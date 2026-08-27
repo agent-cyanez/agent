@@ -298,17 +298,27 @@ do_status() {
 do_snapshots() {
     local name="${1:-local}"
     read -r dev mapper mnt <<< "$(get_target "$name")"
+    local was_mounted
+    was_mounted=$(is_mounted "$mnt" && echo yes || echo no)
     do_unlock "$name"
     restic -r "$mnt" --password-file "$RESTIC_PASSWORD_FILE" snapshots
+    if [[ "$name" != "local" && "$was_mounted" == "no" ]]; then
+        do_lock "$name"
+    fi
 }
 
 do_verify() {
     local name="$1"
     read -r dev mapper mnt <<< "$(get_target "$name")"
+    local was_mounted
+    was_mounted=$(is_mounted "$mnt" && echo yes || echo no)
     do_unlock "$name"
     log "Verifying $name repo integrity"
     restic -r "$mnt" --password-file "$RESTIC_PASSWORD_FILE" check 2>&1 | tee -a "$LOGFILE"
     log "Verification of $name complete"
+    if [[ "$name" != "local" && "$was_mounted" == "no" ]]; then
+        do_lock "$name"
+    fi
 }
 
 cmd="${1:-}"
