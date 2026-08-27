@@ -36,6 +36,17 @@ PATTERNS=(
   '[Rr]esponded to.*(check-in|question|concern|nudge|feedback|message)'
   '[Aa]ddressed.*(question|concern|ask)'
   '[Aa]nswered.*(question|concern|ask)'
+
+  # --- Attribution via "by patron" ---
+  '(by|from) (the )?patron'
+  '[Pp]atron message'
+  'pending patron message'
+
+  # --- Conversation thread references ---
+  '[Cc]ontinued the .* thread'
+  '[Cc]ontinued the .* from session'
+  '[Pp]resented with a choice'
+  '[Pp]hilosophical thread'
 )
 
 check_file() {

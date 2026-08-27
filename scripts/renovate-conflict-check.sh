@@ -42,18 +42,23 @@ import json, re, sys
 with open('$TMPFILE') as f:
     raw = f.read()
 
-raw = re.sub(r'\\\\(?![\"\\\\\/bfnrtu])', r'\\\\\\\\', raw)
 try:
     config = json.loads(raw)
-except Exception:
-    sys.exit(0)
+except json.JSONDecodeError:
+    raw = re.sub(r'\\\\(?![\"\\\\\/bfnrtu])', r'\\\\\\\\', raw)
+    try:
+        config = json.loads(raw)
+    except Exception:
+        sys.exit(0)
 
 for rule in config.get('packageRules', []):
-    if rule.get('enabled') is False:
+    blocked = rule.get('enabled') is False or 'allowedVersions' in rule
+    if blocked:
+        constraint = rule.get('allowedVersions', 'disabled')
         for n in rule.get('matchPackageNames', []):
-            print(n)
+            print(f'{n}|{constraint}')
         for p in rule.get('matchPackagePatterns', []):
-            print(f'PATTERN:{p}')
+            print(f'PATTERN:{p}|{constraint}')
 " 2>/dev/null)
 
 if [[ -z "$DISABLED_PACKAGES" ]]; then
@@ -71,31 +76,33 @@ fi
 DIFF_CONTENT=$(git diff "$BASE...$BRANCH" 2>/dev/null)
 
 CONFLICTS=()
-while IFS= read -r pkg; do
-    [[ -z "$pkg" ]] && continue
+while IFS= read -r line; do
+    [[ -z "$line" ]] && continue
+    pkg="${line%%|*}"
+    constraint="${line#*|}"
     if [[ "$pkg" == PATTERN:* ]]; then
         continue
     fi
     pkg_lower=$(echo "$pkg" | tr '[:upper:]' '[:lower:]')
     title_lower=$(echo "$BRANCH_TITLE" | tr '[:upper:]' '[:lower:]')
     if echo "$title_lower" | grep -qi "$pkg_lower"; then
-        CONFLICTS+=("$pkg (found in branch title: $BRANCH_TITLE)")
+        CONFLICTS+=("$pkg [constraint: $constraint] (found in branch title: $BRANCH_TITLE)")
         continue
     fi
     if echo "$DIFF_CONTENT" | grep -qi "\"$pkg_lower\"\|: *$pkg_lower\|FROM $pkg_lower"; then
-        CONFLICTS+=("$pkg (found in diff)")
+        CONFLICTS+=("$pkg [constraint: $constraint] (found in diff)")
     fi
 done <<< "$DISABLED_PACKAGES"
 
 if [[ ${#CONFLICTS[@]} -gt 0 ]]; then
-    echo "CONFLICT: PR updates packages that are explicitly disabled in renovate.json:"
+    echo "CONFLICT: PR updates packages with version constraints in renovate.json:"
     for c in "${CONFLICTS[@]}"; do
         echo "  ✗ $c"
     done
     echo ""
-    echo "Check renovate.json packageRules for the disable reason before merging."
+    echo "Check renovate.json packageRules for the constraint reason before merging."
     exit 1
 fi
 
-echo "OK: no conflicts with disabled Renovate packages"
+echo "OK: no conflicts with constrained Renovate packages"
 exit 0
