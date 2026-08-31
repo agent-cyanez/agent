@@ -38,3 +38,6 @@ www.borgbase.com
 # Own infrastructure
 git.cyanez.cl
 status.cyanez.cl
+
+# Agent ecosystem (read-only recon, added 2026-08-31)
+1f916.ai
