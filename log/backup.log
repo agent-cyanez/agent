@@ -1075,3 +1075,203 @@ Timestamps shown in local time
 
 [2026-08-30 03:28:57] Retention policy applied on local
 [2026-08-30 04:00:00] ERROR: /dev/sdb not found — is the drive connected?
+[2026-08-31 03:29:09] local drive ready at /mnt/backup-local
+[2026-08-31 03:29:09] Starting backup to local
+open repository
+using parent snapshot 441041eb
+load index files
+start scan on [/home/nosferath/projects /home/nosferath/Zettelkasten /home/nosferath/tools /home/nosferath/ubc /home/nosferath/aws /home/nosferath/dotfiles /home/nosferath/data /DATA/3D Prints /DATA/Gallery /DATA/Media /home/vela /etc/cloudflared /etc/crypttab /etc/fstab /etc/systemd/system/restic-backup.service /etc/systemd/system/restic-backup.timer /etc/systemd/system/restic-backup-offsite.service /etc/systemd/system/cloudflared.service /etc/systemd/system/cloudflared-update.service /etc/systemd/system/cloudflared-update.timer]
+start backup on [/home/nosferath/projects /home/nosferath/Zettelkasten /home/nosferath/tools /home/nosferath/ubc /home/nosferath/aws /home/nosferath/dotfiles /home/nosferath/data /DATA/3D Prints /DATA/Gallery /DATA/Media /home/vela /etc/cloudflared /etc/crypttab /etc/fstab /etc/systemd/system/restic-backup.service /etc/systemd/system/restic-backup.timer /etc/systemd/system/restic-backup-offsite.service /etc/systemd/system/cloudflared.service /etc/systemd/system/cloudflared-update.service /etc/systemd/system/cloudflared-update.timer]
+scan finished in 7.574s: 145266 files, 184.651 GiB
+
+Files:        1034 new,   386 changed, 143846 unmodified
+Dirs:          200 new,   884 changed, 47856 unmodified
+Data Blobs:   1459 new
+Tree Blobs:    995 new
+Added to the repository: 251.058 MiB (151.607 MiB stored)
+
+processed 145266 files, 184.651 GiB in 0:22
+snapshot 759fecf4 saved
+[2026-08-31 03:29:32] Backup to local complete
+[2026-08-31 03:29:32] Dumping Docker volumes
+[2026-08-31 03:29:32] Backing up volume: blog_storage
+[2026-08-31 03:29:33] Backing up volume: forgejo_docker_certs
+[2026-08-31 03:29:33] Backing up volume: kamal-proxy-config
+[2026-08-31 03:29:34] Backing up volume: beacon_beacon-data
+[2026-08-31 03:29:36] Docker volume dumps complete
+[2026-08-31 03:29:36] Running retention policy on local (keep 7 daily, 4 weekly, 6 monthly)
+Applying Policy: keep 7 daily, 4 weekly, 6 monthly snapshots
+keep 4 snapshots:
+ID        Time                 Host        Tags        Reasons                  Paths                                              Size
+----------------------------------------------------------------------------------------------------------------------------------------------
+1800381f  2026-08-28 03:04:42  nos-nas     local       daily snapshot           /DATA/3D Prints                                    184.536 GiB
+                                                       oldest weekly snapshot   /DATA/Gallery
+                                                       oldest monthly snapshot  /DATA/Media
+                                                                                /etc/cloudflared
+                                                                                /etc/crypttab
+                                                                                /etc/fstab
+                                                                                /etc/systemd/system/cloudflared-update.service
+                                                                                /etc/systemd/system/cloudflared-update.timer
+                                                                                /etc/systemd/system/cloudflared.service
+                                                                                /etc/systemd/system/restic-backup-offsite.service
+                                                                                /etc/systemd/system/restic-backup.service
+                                                                                /etc/systemd/system/restic-backup.timer
+                                                                                /home/nosferath/Zettelkasten
+                                                                                /home/nosferath/aws
+                                                                                /home/nosferath/data
+                                                                                /home/nosferath/dotfiles
+                                                                                /home/nosferath/projects
+                                                                                /home/nosferath/tools
+                                                                                /home/nosferath/ubc
+                                                                                /home/vela
+
+abfee63f  2026-08-29 03:11:22  nos-nas     local       daily snapshot           /DATA/3D Prints                                    184.592 GiB
+                                                                                /DATA/Gallery
+                                                                                /DATA/Media
+                                                                                /etc/cloudflared
+                                                                                /etc/crypttab
+                                                                                /etc/fstab
+                                                                                /etc/systemd/system/cloudflared-update.service
+                                                                                /etc/systemd/system/cloudflared-update.timer
+                                                                                /etc/systemd/system/cloudflared.service
+                                                                                /etc/systemd/system/restic-backup-offsite.service
+                                                                                /etc/systemd/system/restic-backup.service
+                                                                                /etc/systemd/system/restic-backup.timer
+                                                                                /home/nosferath/Zettelkasten
+                                                                                /home/nosferath/aws
+                                                                                /home/nosferath/data
+                                                                                /home/nosferath/dotfiles
+                                                                                /home/nosferath/projects
+                                                                                /home/nosferath/tools
+                                                                                /home/nosferath/ubc
+                                                                                /home/vela
+
+441041eb  2026-08-30 03:28:30  nos-nas     local       daily snapshot           /DATA/3D Prints                                    184.632 GiB
+                                                       weekly snapshot          /DATA/Gallery
+                                                                                /DATA/Media
+                                                                                /etc/cloudflared
+                                                                                /etc/crypttab
+                                                                                /etc/fstab
+                                                                                /etc/systemd/system/cloudflared-update.service
+                                                                                /etc/systemd/system/cloudflared-update.timer
+                                                                                /etc/systemd/system/cloudflared.service
+                                                                                /etc/systemd/system/restic-backup-offsite.service
+                                                                                /etc/systemd/system/restic-backup.service
+                                                                                /etc/systemd/system/restic-backup.timer
+                                                                                /home/nosferath/Zettelkasten
+                                                                                /home/nosferath/aws
+                                                                                /home/nosferath/data
+                                                                                /home/nosferath/dotfiles
+                                                                                /home/nosferath/projects
+                                                                                /home/nosferath/tools
+                                                                                /home/nosferath/ubc
+                                                                                /home/vela
+
+759fecf4  2026-08-31 03:29:09  nos-nas     local       daily snapshot           /DATA/3D Prints                                    184.651 GiB
+                                                       weekly snapshot          /DATA/Gallery
+                                                       monthly snapshot         /DATA/Media
+                                                                                /etc/cloudflared
+                                                                                /etc/crypttab
+                                                                                /etc/fstab
+                                                                                /etc/systemd/system/cloudflared-update.service
+                                                                                /etc/systemd/system/cloudflared-update.timer
+                                                                                /etc/systemd/system/cloudflared.service
+                                                                                /etc/systemd/system/restic-backup-offsite.service
+                                                                                /etc/systemd/system/restic-backup.service
+                                                                                /etc/systemd/system/restic-backup.timer
+                                                                                /home/nosferath/Zettelkasten
+                                                                                /home/nosferath/aws
+                                                                                /home/nosferath/data
+                                                                                /home/nosferath/dotfiles
+                                                                                /home/nosferath/projects
+                                                                                /home/nosferath/tools
+                                                                                /home/nosferath/ubc
+                                                                                /home/vela
+----------------------------------------------------------------------------------------------------------------------------------------------
+Timestamps shown in local time
+4 snapshots
+
+keep 7 snapshots:
+ID        Time                 Host        Tags        Reasons                  Paths                         Size
+-------------------------------------------------------------------------------------------------------------------------
+3f0c8be1  2026-08-21 09:51:33  nos-nas     local       daily snapshot           /DATA/3D Prints               182.049 GiB
+                                                       oldest weekly snapshot   /DATA/Gallery
+                                                       oldest monthly snapshot  /DATA/Media
+                                                                                /home/nosferath/Zettelkasten
+                                                                                /home/nosferath/aws
+                                                                                /home/nosferath/data
+                                                                                /home/nosferath/dotfiles
+                                                                                /home/nosferath/projects
+                                                                                /home/nosferath/tools
+                                                                                /home/nosferath/ubc
+
+a587d0ba  2026-08-22 03:08:56  nos-nas     local       daily snapshot           /DATA/3D Prints               182.670 GiB
+                                                                                /DATA/Gallery
+                                                                                /DATA/Media
+                                                                                /home/nosferath/Zettelkasten
+                                                                                /home/nosferath/aws
+                                                                                /home/nosferath/data
+                                                                                /home/nosferath/dotfiles
+                                                                                /home/nosferath/projects
+                                                                                /home/nosferath/tools
+                                                                                /home/nosferath/ubc
+
+0ac6feb3  2026-08-23 03:20:38  nos-nas     local       daily snapshot           /DATA/3D Prints               181.501 GiB
+                                                       weekly snapshot          /DATA/Gallery
+                                                                                /DATA/Media
+                                                                                /home/nosferath/Zettelkasten
+                                                                                /home/nosferath/aws
+                                                                                /home/nosferath/data
+                                                                                /home/nosferath/dotfiles
+                                                                                /home/nosferath/projects
+                                                                                /home/nosferath/tools
+                                                                                /home/nosferath/ubc
+
+9ffb6f8c  2026-08-24 03:12:56  nos-nas     local       daily snapshot           /DATA/3D Prints               182.710 GiB
+                                                                                /DATA/Gallery
+                                                                                /DATA/Media
+                                                                                /home/nosferath/Zettelkasten
+                                                                                /home/nosferath/aws
+                                                                                /home/nosferath/data
+                                                                                /home/nosferath/dotfiles
+                                                                                /home/nosferath/projects
+                                                                                /home/nosferath/tools
+                                                                                /home/nosferath/ubc
+
+f463741b  2026-08-25 03:23:52  nos-nas     local       daily snapshot           /DATA/3D Prints               182.759 GiB
+                                                                                /DATA/Gallery
+                                                                                /DATA/Media
+                                                                                /home/nosferath/Zettelkasten
+                                                                                /home/nosferath/aws
+                                                                                /home/nosferath/data
+                                                                                /home/nosferath/dotfiles
+                                                                                /home/nosferath/projects
+                                                                                /home/nosferath/tools
+                                                                                /home/nosferath/ubc
+
+565a73fa  2026-08-26 03:18:56  nos-nas     local       daily snapshot           /DATA/3D Prints               182.734 GiB
+                                                                                /DATA/Gallery
+                                                                                /DATA/Media
+                                                                                /home/nosferath/Zettelkasten
+                                                                                /home/nosferath/aws
+                                                                                /home/nosferath/data
+                                                                                /home/nosferath/dotfiles
+                                                                                /home/nosferath/projects
+                                                                                /home/nosferath/tools
+                                                                                /home/nosferath/ubc
+
+f133d2a7  2026-08-27 03:10:22  nos-nas     local       daily snapshot           /DATA/3D Prints               182.972 GiB
+                                                       weekly snapshot          /DATA/Gallery
+                                                       monthly snapshot         /DATA/Media
+                                                                                /home/nosferath/Zettelkasten
+                                                                                /home/nosferath/aws
+                                                                                /home/nosferath/data
+                                                                                /home/nosferath/dotfiles
+                                                                                /home/nosferath/projects
+                                                                                /home/nosferath/tools
+                                                                                /home/nosferath/ubc
+-------------------------------------------------------------------------------------------------------------------------
+Timestamps shown in local time
+7 snapshots
+
+[2026-08-31 03:29:37] Retention policy applied on local
