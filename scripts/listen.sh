@@ -15,6 +15,7 @@ RESPONSE_TOPIC="vela"
 DATA_DIR="$VELA_DIR/data"
 MAX_DAILY_SESSIONS=${VELA_MAX_DAILY_SESSIONS:-120}
 LEDGER="$VELA_DIR/scripts/session-ledger.sh"
+DEFER_QUEUE="$DATA_DIR/deferred-messages.jsonl"
 
 get_daily_sessions() {
     local today=$(date +%Y-%m-%d)
@@ -38,37 +39,16 @@ log() {
     echo "$(date -Iseconds) $*" >> "$LOG_FILE"
 }
 
-cleanup() {
-    rm -f "$LOCK_FILE"
-    log "[STOP] listener shutting down"
-}
+# Process a single ntfy JSON message line.
+# $1 = raw JSON line
+# $2 = "defer" (save to queue if night/budget) or "nodefer" (process regardless)
+# Returns 0 always; skips silently for non-message events.
+process_message() {
+    local line="$1"
+    local defer_mode="${2:-defer}"
 
-if [[ -f "$LOCK_FILE" ]]; then
-    pid=$(cat "$LOCK_FILE")
-    if kill -0 "$pid" 2>/dev/null; then
-        echo "Listener already running (pid=$pid)"
-        exit 0
-    fi
-    rm -f "$LOCK_FILE"
-fi
-
-# Kill any orphaned listener processes (covers cases where lock file was lost)
-while IFS= read -r pid; do
-    [[ "$pid" -eq "$$" ]] && continue
-    echo "Killing orphaned listener (pid=$pid)"
-    kill "$pid" 2>/dev/null || true
-done < <(pgrep -f "bash.*/scripts/listen\.sh" 2>/dev/null || true)
-
-echo $$ > "$LOCK_FILE"
-trap cleanup EXIT
-
-log "[START] listening on $NTFY_URL/$NTFY_TOPIC (killed orphaned listeners if any)"
-
-# Stream messages from ntfy using server-sent events
-while true; do
-    curl -s --no-buffer "$NTFY_URL/$NTFY_TOPIC/json" 2>/dev/null | while IFS= read -r line; do
-        # Parse all fields at once
-        read -r event_type msg_id message title < <(echo "$line" | python3 -c "
+    local event_type msg_id message title
+    read -r event_type msg_id message title < <(echo "$line" | python3 -c "
 import sys, json
 try:
     d = json.loads(sys.stdin.read())
@@ -77,24 +57,25 @@ except Exception:
     print('error   ')
 " 2>/dev/null || echo "error   ")
 
-        if [[ "$event_type" != "message" ]]; then
-            continue
-        fi
+    if [[ "$event_type" != "message" ]]; then
+        return 0
+    fi
 
-        if [[ -z "$message" ]]; then
-            continue
-        fi
+    if [[ -z "$message" ]]; then
+        return 0
+    fi
 
-        # Dedup: check if this message ID was already processed
-        if [[ -n "$msg_id" ]] && "$LEDGER" check "$msg_id" 2>/dev/null; then
-            log "[DEDUP] message $msg_id already processed, skipping"
-            continue
-        fi
+    # Dedup: check if this message ID was already processed
+    if [[ -n "$msg_id" ]] && "$LEDGER" check "$msg_id" 2>/dev/null; then
+        log "[DEDUP] message $msg_id already processed, skipping"
+        return 0
+    fi
 
-        log "[MSG] id=$msg_id title='$title' message='$message'"
+    log "[MSG] id=$msg_id title='$title' message='$message'"
 
-        # Re-read the full message without newline flattening for the prompt
-        full_message=$(echo "$line" | python3 -c "
+    # Re-read the full message without newline flattening for the prompt
+    local full_message
+    full_message=$(echo "$line" | python3 -c "
 import sys, json
 try:
     print(json.loads(sys.stdin.read()).get('message',''))
@@ -102,16 +83,19 @@ except Exception:
     print('')
 " 2>/dev/null || echo "$message")
 
-        subject_line=""
-        if [[ -n "$title" ]]; then
-            subject_line="Subject: $title"
-        fi
+    local subject_line=""
+    if [[ -n "$title" ]]; then
+        subject_line="Subject: $title"
+    fi
 
-        msg_time_clt=$(TZ=America/Santiago date '+%H:%M CLT')
+    local msg_time_clt
+    msg_time_clt=$(TZ=America/Santiago date '+%H:%M CLT')
 
-        session_context=$("$LEDGER" context 3 2>/dev/null || echo "No prior session data.")
+    local session_context
+    session_context=$("$LEDGER" context 3 2>/dev/null || echo "No prior session data.")
 
-        prompt=$(cat <<LISTENEOF
+    local prompt
+    prompt=$(cat <<LISTENEOF
 You are Vela, an autonomous AI agent. Your patron just sent you a message via ntfy.
 Current time: $msg_time_clt
 
@@ -143,37 +127,102 @@ Commit changes if any.
 LISTENEOF
 )
 
-        # Night guard — defer responses between midnight and wake hour
-        WAKE_HOUR=${VELA_WAKE_HOUR:-9}
-        current_hour=$(date +%-H)
-        if (( current_hour < WAKE_HOUR )); then
-            log "[SLEEP] message received at hour=$current_hour, deferring until $WAKE_HOUR:00"
-            continue
-        fi
+    # Night guard — defer responses between midnight and wake hour
+    local wake_hour=${VELA_WAKE_HOUR:-9}
+    local current_hour
+    current_hour=$(date +%-H)
+    if (( current_hour < wake_hour )) && [[ "$defer_mode" == "defer" ]]; then
+        log "[SLEEP] message received at hour=$current_hour, deferring until $wake_hour:00"
+        echo "$line" >> "$DEFER_QUEUE"
+        return 0
+    fi
 
-        daily_count=$(get_daily_sessions)
-        if (( daily_count >= MAX_DAILY_SESSIONS )); then
-            log "[BUDGET] $daily_count/$MAX_DAILY_SESSIONS sessions today, deferring message"
+    local daily_count
+    daily_count=$(get_daily_sessions)
+    if (( daily_count >= MAX_DAILY_SESSIONS )); then
+        log "[BUDGET] $daily_count/$MAX_DAILY_SESSIONS sessions today, deferring message"
+        echo "$line" >> "$DEFER_QUEUE"
+        if [[ "$defer_mode" == "defer" ]]; then
             curl -s "$NTFY_URL/$RESPONSE_TOPIC" -H 'Title: Vela' \
-                -d "Daily session budget reached ($daily_count/$MAX_DAILY_SESSIONS). I'll pick this up tomorrow. Message saved in listener log." < /dev/null
-            continue
+                -d "Daily session budget reached ($daily_count/$MAX_DAILY_SESSIONS). I'll pick this up tomorrow. Message saved." < /dev/null
         fi
+        return 0
+    fi
 
-        log "[SPAWN] launching claude session ($((daily_count+1))/$MAX_DAILY_SESSIONS)"
-        increment_session_count
+    log "[SPAWN] launching claude session ($((daily_count+1))/$MAX_DAILY_SESSIONS)"
+    increment_session_count
 
-        # Record in session ledger with message ID
-        session_id=$("$LEDGER" start listener "ntfy:$msg_id" "$msg_id" 2>/dev/null || echo "")
+    # Record in session ledger with message ID
+    local session_id
+    session_id=$("$LEDGER" start listener "ntfy:$msg_id" "$msg_id" 2>/dev/null || echo "")
 
-        cd "$VELA_DIR"
-        claude --print --dangerously-skip-permissions -p "$prompt" < /dev/null >> "$LOG_FILE" 2>&1
+    cd "$VELA_DIR"
+    claude --print --dangerously-skip-permissions -p "$prompt" < /dev/null >> "$LOG_FILE" 2>&1
 
-        # Record session completion
-        if [[ -n "$session_id" ]]; then
-            "$LEDGER" end "$session_id" 2>/dev/null || true
-        fi
+    # Record session completion
+    if [[ -n "$session_id" ]]; then
+        "$LEDGER" end "$session_id" 2>/dev/null || true
+    fi
 
-        log "[DONE] session complete"
+    log "[DONE] session complete"
+}
+
+# Process any messages saved to the deferred queue during sleep/budget hours.
+drain_deferred() {
+    if [[ ! -f "$DEFER_QUEUE" ]] || [[ ! -s "$DEFER_QUEUE" ]]; then
+        return 0
+    fi
+
+    local wake_hour=${VELA_WAKE_HOUR:-9}
+    local current_hour
+    current_hour=$(date +%-H)
+    if (( current_hour < wake_hour )); then
+        return 0
+    fi
+
+    local count
+    count=$(wc -l < "$DEFER_QUEUE")
+    log "[DRAIN] processing $count deferred message(s)"
+
+    mv "$DEFER_QUEUE" "${DEFER_QUEUE}.processing"
+    while IFS= read -r deferred_line; do
+        process_message "$deferred_line" "nodefer"
+    done < "${DEFER_QUEUE}.processing"
+    rm -f "${DEFER_QUEUE}.processing"
+}
+
+cleanup() {
+    rm -f "$LOCK_FILE"
+    log "[STOP] listener shutting down"
+}
+
+if [[ -f "$LOCK_FILE" ]]; then
+    pid=$(cat "$LOCK_FILE")
+    if kill -0 "$pid" 2>/dev/null; then
+        echo "Listener already running (pid=$pid)"
+        exit 0
+    fi
+    rm -f "$LOCK_FILE"
+fi
+
+# Kill any orphaned listener processes (covers cases where lock file was lost)
+while IFS= read -r pid; do
+    [[ "$pid" -eq "$$" ]] && continue
+    echo "Killing orphaned listener (pid=$pid)"
+    kill "$pid" 2>/dev/null || true
+done < <(pgrep -f "bash.*/scripts/listen\.sh" 2>/dev/null || true)
+
+echo $$ > "$LOCK_FILE"
+trap cleanup EXIT
+
+log "[START] listening on $NTFY_URL/$NTFY_TOPIC (killed orphaned listeners if any)"
+
+# Stream messages from ntfy using server-sent events
+while true; do
+    drain_deferred
+
+    curl -s --no-buffer "$NTFY_URL/$NTFY_TOPIC/json" 2>/dev/null | while IFS= read -r line; do
+        process_message "$line" "defer"
     done
 
     # If curl exits (connection drop), wait and reconnect
